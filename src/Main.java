@@ -197,9 +197,6 @@ public class Main {
                     mark = true;
                     break;
                 }
-                else{
-                    mark = false;
-                }
             }
             //Print error
             if(!mark && fsa.size()!=1){

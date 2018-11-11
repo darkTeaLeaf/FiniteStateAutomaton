@@ -18,14 +18,14 @@ public class KleeneAlgorithm {
             for (int i = 0; i < stateType.get(key).size(); i++) {
                 if(stateType.get(key).get(i).equals("initial")){
                     for (int j = 0; j < states.size(); j++) {
-                        if(states.get(j).equals(stateType.get(key).get(i))){
+                        if(states.get(j).equals(key)){
                             initial = j;
                         }
                     }
                 }
                 if(stateType.get(key).get(i).equals("final")){
                     for (int j = 0; j < states.size(); j++) {
-                        if(states.get(j).equals(stateType.get(key).get(i))){
+                        if(states.get(j).equals(key)){
                             fin = j;
                         }
                     }
@@ -61,17 +61,33 @@ public class KleeneAlgorithm {
                 for (int j = 0; j < stateTransitions.size(); j++) {
                     if (stateTransitions.get(j).end.equals(states.get(k))) {
                         if (i == k) {
-                            stepsFirst.put(String.valueOf(i) + String.valueOf(k), stateTransitions.get(j).letter + "|eps");
-                            flag = true;
+                            if(stepsFirst.get(String.valueOf(i) + String.valueOf(k))== null) {
+                                stepsFirst.put(String.valueOf(i) + String.valueOf(k), stateTransitions.get(j).letter + "|eps");
+                                flag = true;
+                            }
+                            else{
+                                stepsFirst.put(String.valueOf(i) + String.valueOf(k), stepsFirst.get(String.valueOf(i)
+                                        + String.valueOf(k)).substring(0, stepsFirst.get(String.valueOf(i)
+                                        + String.valueOf(k)).length() - 4) + "|" + stateTransitions.get(j).letter + "|eps");
+                                flag = true;
+                            }
                         } else {
-                            stepsFirst.put(String.valueOf(i) + String.valueOf(k), stateTransitions.get(j).letter);
-                            flag = true;
+                            if(stepsFirst.get(String.valueOf(i) + String.valueOf(k))== null) {
+                                stepsFirst.put(String.valueOf(i) + String.valueOf(k), stateTransitions.get(j).letter);
+                                flag = true;
+                            }
+                            else {
+                                stepsFirst.put(String.valueOf(i) + String.valueOf(k), stepsFirst.get(String.valueOf(i)
+                                        + String.valueOf(k)) + "|" + stateTransitions.get(j).letter);
+                                flag = true;
+                            }
                         }
                     }
                 }
                 if (!flag) {
                     stepsFirst.put(String.valueOf(i) + String.valueOf(k), "{}");
                 }
+                flag = false;
             }
         }
     }
@@ -82,16 +98,16 @@ public class KleeneAlgorithm {
                 for (String key: stepsFirst.keySet()){
                     stepsSecond.put(key, "(" + stepsFirst.get(key.substring(0,1) + String.valueOf(j)) + ")"
                     + "(" + stepsFirst.get(String.valueOf(j) + String.valueOf(j)) + ")*"
-                    + "(" + stepsFirst.get(String.valueOf(j)) + key.substring(1) + ")|"
-                    + "(" + stepsFirst.get(key));
+                    + "(" + stepsFirst.get(String.valueOf(j) + key.substring(1)) + ")|"
+                    + "(" + stepsFirst.get(key) + ")");
                 }
             }
             else {
                 for (String key: stepsSecond.keySet()){
                     stepsFirst.put(key, "(" + stepsSecond.get(key.substring(0,1) + String.valueOf(j)) + ")"
                             + "(" + stepsSecond.get(String.valueOf(j) + String.valueOf(j)) + ")*"
-                            + "(" + stepsSecond.get(String.valueOf(j)) + key.substring(1) + ")|"
-                            + "(" + stepsSecond.get(key));
+                            + "(" + stepsSecond.get(String.valueOf(j) + key.substring(1)) + ")|"
+                            + "(" + stepsSecond.get(key) + ")");
                 }
             }
         }
