@@ -10,6 +10,7 @@ public class Main {
         PrintWriter writer = new PrintWriter(new FileWriter(new File("result.txt")));
 
         //Create arrays for input data
+        ArrayList<String> states = new ArrayList<>();
         HashMap<String, ArrayList<Transition>> fsa = new HashMap<>();
         HashMap<String, ArrayList<Transition>> inTransitions = new HashMap<>();
         HashMap<String, ArrayList<String>> stateType = new HashMap<>();
@@ -24,6 +25,7 @@ public class Main {
                 //Get necessary data from string
                 for (String s : input.split(",")) {
                     //Add state to array
+                    states.add(s);
                     fsa.put(s, new ArrayList<>());
                     inTransitions.put(s, new ArrayList<>());
                     //Set default type of state
@@ -162,11 +164,9 @@ public class Main {
             E5(writer);
         }
 
-        //Print report and warnings
-        report(writer, alphabet, fsa);
-        boolean warning1 = W1(writer, stateType);
-        boolean warning2 = W2(writer, fsa, stateType, warning1);
-        W3(writer, fsa, alphabet, warning1 || warning2);
+        E6(writer, fsa, alphabet);
+        KleeneAlgorithm algorithm = new KleeneAlgorithm();
+        writer.write(algorithm.findRegExp(states,fsa, stateType));
 
         in.close();
         writer.close();
@@ -229,104 +229,11 @@ public class Main {
         System.exit(0);
     }
 
-    private static void report(PrintWriter writer, ArrayList<String> alphabet,
-                               HashMap<String, ArrayList<Transition>> fsa) {
-        boolean mark = false;
-        boolean end = false;
-
-        //Go through alphabet and check existence of each letter for each state
-        for (String letter : alphabet) {
-            for (String key : fsa.keySet()) {
-                for (Transition transition : fsa.get(key)) {
-                    if (transition.letter.equals(letter)) {
-                        mark = true;
-                        break;
-                    }
-                }
-                if (!mark) {
-                    writer.write("FSA is incomplete");
-                    end = true;
-                    break;
-                }
-                mark = false;
-            }
-            if (end) {
-                break;
-            }
-        }
-        if (!end) {
-            writer.write("FSA is complete");
-        }
-    }
-
-    private static boolean W1(PrintWriter writer, HashMap<String, ArrayList<String>> stateType) {
-        boolean mark = false;
-        //Go through array of states' types and find or not final states
-        for (String type : stateType.keySet()) {
-            if (stateType.get(type).contains("final")) {
-                mark = true;
-            }
-        }
-        //Print warning
-        if (!mark) {
-            writer.write("\nWarning:\n");
-            writer.write("W1: Accepting state is not defined");
-        }
-        return !mark;
-    }
-
-    private static boolean W2(PrintWriter writer, HashMap<String, ArrayList<Transition>> fsa,
-                              HashMap<String, ArrayList<String>> stateType, boolean warning) {
-        Stack<String> stack = new Stack<>();
-        HashMap<String, Integer> colors = new HashMap<>();
-        for (String state : fsa.keySet()) {
-            colors.put(state, 0);
-        }
-        String initial = "";
-        for (String key : stateType.keySet()) {
-            if (stateType.get(key).contains("initial")) {
-                initial = key;
-                break;
-            }
-        }
-
-        //DFS from initial state
-        stack.push(initial);
-        while (!stack.empty()) {
-            String state = stack.pop();
-            colors.put(state, 1); //Set 1 for state which is reachable from initial state
-            for (Transition transition : fsa.get(state)) {
-                if (colors.get(transition.end) == 0) {
-                    stack.push(transition.end);
-                }
-            }
-        }
-
-        //Check existence of states with 0 (not 1 like in reachable states)
-        for (String state : colors.keySet()) {
-            if (colors.get(state) == 0) {
-                if (!warning) {
-                    writer.write("\nWarning:\n");
-                } else {
-                    writer.write("\n");
-                }
-                writer.write("W2: Some states are not reachable from initial state");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void W3(PrintWriter writer, HashMap<String, ArrayList<Transition>> fsa, ArrayList<String> alphabet, boolean warning) {
+    private static void E6(PrintWriter writer, HashMap<String, ArrayList<Transition>> fsa, ArrayList<String> alphabet) {
         for (String key : fsa.keySet()) {
             //Check existence of transitions more than in alphabet for each state
             if (fsa.get(key).size() > alphabet.size()) {
-                if (!warning) {
-                    writer.write("\nWarning:\n");
-                } else {
-                    writer.write("\n");
-                }
-                writer.write("W3: FSA is nondeterministic");
+                writer.write("E6: FSA is nondeterministic");
                 break;
             }
         }
