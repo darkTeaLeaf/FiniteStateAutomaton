@@ -155,7 +155,7 @@ public class Main {
                     }
                 }
                 //Check existence of disjoint states
-                E2(writer, fsa, inTransitions);
+                E2(writer, fsa, inTransitions, states);
 
             } else {
                 E5(writer);
@@ -180,32 +180,61 @@ public class Main {
     }
 
     private static void E2(PrintWriter writer, HashMap<String, ArrayList<Transition>> fsa, HashMap<String,
-            ArrayList<Transition>> inTransition) {
-        boolean mark = false;
-
-        for (String key : fsa.keySet()) {
-            //Check existence of transitions except loop transitions in transitions which come out of state
-            for (Transition transition: fsa.get(key)){
-                if(!transition.end.equals(transition.start)){
-                    mark = true;
-                    break;
+            ArrayList<Transition>> inTransition, ArrayList<String> states) {
+//        boolean mark = false;
+//
+//        for (String key : fsa.keySet()) {
+//            //Check existence of transitions except loop transitions in transitions which come out of state
+//            for (Transition transition: fsa.get(key)){
+//                if(!transition.end.equals(transition.start)){
+//                    mark = true;
+//                    break;
+//                }
+//            }
+//            //Check existence of transitions except loop transitions in transitions which come in state
+//            for (Transition transition: inTransition.get(key)){
+//                if(!transition.end.equals(transition.start)){
+//                    mark = true;
+//                    break;
+//                }
+//            }
+//            //Print error
+//            if(!mark && fsa.size()!=1){
+//                writer.write("Error:\nE2: Some states are disjoint");
+//                writer.close();
+//                System.exit(0);
+//            }
+//            mark = false;
+//        }
+        ArrayList<String> states2 = new ArrayList<>(states);
+        Stack<String> stack = new Stack<>();
+        ArrayList<String> join = new ArrayList<>();
+        stack.push(states2.get(0));
+        String pop;
+        while (!stack.empty()){
+            pop = stack.pop();
+            for (int i = 0; i < fsa.get(pop).size(); i++) {
+                if(!fsa.get(pop).get(i).start.equals(fsa.get(pop).get(i).end) && !join.contains(fsa.get(pop).get(i).end)) {
+                    stack.push(fsa.get(pop).get(i).end);
                 }
             }
-            //Check existence of transitions except loop transitions in transitions which come in state
-            for (Transition transition: inTransition.get(key)){
-                if(!transition.end.equals(transition.start)){
-                    mark = true;
-                    break;
-                }
-            }
-            //Print error
-            if(!mark && fsa.size()!=1){
-                writer.write("Error:\nE2: Some states are disjoint");
-                writer.close();
-                System.exit(0);
-            }
-            mark = false;
+            join.add(pop);
         }
+
+        for (int i = 0; i < states2.size(); i++) {
+            for (String aJoin : join) {
+                if (states2.get(i).equals(aJoin)) {
+                    states2.remove(i);
+                }
+            }
+        }
+
+        if(!states2.isEmpty()){
+            writer.write("Error:\nE2: Some states are disjoint");
+            writer.close();
+            System.exit(0);
+        }
+
     }
 
     private static void E3(PrintWriter writer, String transition) {
