@@ -15,6 +15,8 @@ public class Main {
         HashMap<String, ArrayList<Transition>> inTransitions = new HashMap<>();
         HashMap<String, ArrayList<String>> stateType = new HashMap<>();
         ArrayList<String> alphabet = new ArrayList<>();
+        String initial = "";
+        ArrayList<String> fin = new ArrayList<>();
 
         //Parsing the first string
         if (in.hasNext()) { //Check existence of string for E5
@@ -72,6 +74,7 @@ public class Main {
                             ArrayList<String> type = new ArrayList<>();
                             type.add("initial");
                             stateType.put(key, type);
+                            initial = s;
                         }
                     }
                     //Check existence of state in states' set for E1
@@ -104,6 +107,7 @@ public class Main {
                                 type.add("final");
                                 stateType.put(key, type);
                             }
+                            fin.add(s);
                         }
                     }
                     //Check existence of state in states' set for E1
@@ -166,7 +170,7 @@ public class Main {
 
         E6(writer, fsa, alphabet);
         KleeneAlgorithm algorithm = new KleeneAlgorithm();
-        writer.write(algorithm.findRegExp(states,fsa, stateType));
+        writer.write(algorithm.findRegExp(states,fsa, initial, fin));
 
         in.close();
         writer.close();
