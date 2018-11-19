@@ -79,8 +79,13 @@ public class KleeneAlgorithm {
                         }
                     }
                 }
-                if (!flag) {
-                    stepsFirst.put(String.valueOf(i) + String.valueOf(k), "{}");
+                if (!flag && (i == k)) {
+                    stepsFirst.put(String.valueOf(i) + String.valueOf(k), "eps");
+                }
+                else {
+                    if(!flag){
+                        stepsFirst.put(String.valueOf(i) + String.valueOf(k), "{}");
+                    }
                 }
                 flag = false;
             }

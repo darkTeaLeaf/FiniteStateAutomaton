@@ -22,7 +22,7 @@ public class Main {
         if (in.hasNext()) { //Check existence of string for E5
             String input = in.next();
             //Check form of string for E5
-            if (Pattern.matches("states=\\{((([a-z0-9]+,)*[a-z0-9]+)?)}",input)) {
+            if (Pattern.matches("states=\\{((([a-z0-9]+,)*[a-z0-9]+)?)}", input)) {
                 input = input.substring(input.indexOf('{') + 1, input.length() - 1);
                 //Get necessary data from string
                 for (String s : input.split(",")) {
@@ -46,7 +46,7 @@ public class Main {
         if (in.hasNext()) { //Check existence of string for E5
             String input = in.next();
             //Check form of string for E5
-            if (Pattern.matches("alpha=\\{((([a-z0-9_]+,)*[a-z0-9_]+)?)}",input)) {
+            if (Pattern.matches("alpha=\\{((([a-z0-9_]+,)*[a-z0-9_]+)?)}", input)) {
                 //Add element of alphabet to array
                 input = input.substring(input.indexOf('{') + 1, input.length() - 1);
                 Collections.addAll(alphabet, input.split(","));
@@ -61,7 +61,7 @@ public class Main {
         if (in.hasNext()) {
             String input = in.next();
             //Check form of string for E5
-            if (Pattern.matches("init.st=\\{(([a-z0-9]+)?)}",input)) {
+            if (Pattern.matches("init.st=\\{(([a-z0-9]+)?)}", input)) {
                 input = input.substring(input.indexOf('{') + 1, input.length() - 1);
                 //Check existence of initial state for E4
                 if (input.equals("")) {
@@ -93,7 +93,7 @@ public class Main {
         if (in.hasNext()) {
             String input = in.next();
             //Check form of string for E5
-            if (Pattern.matches("fin.st=\\{((([a-z0-9]+,)*[a-z0-9]+)?)}",input)) {
+            if (Pattern.matches("fin.st=\\{((([a-z0-9]+,)*[a-z0-9]+)?)}", input)) {
                 input = input.substring(input.indexOf('{') + 1, input.length() - 1);
                 for (String s : input.split(",")) {
                     for (String key : fsa.keySet()) {
@@ -159,7 +159,7 @@ public class Main {
                     }
                 }
                 //Check existence of disjoint states
-                E2(writer, fsa, states);
+                E2(writer, fsa, inTransitions, states);
 
             } else {
                 E5(writer);
@@ -170,7 +170,7 @@ public class Main {
 
         E6(writer, fsa, alphabet);
         KleeneAlgorithm algorithm = new KleeneAlgorithm();
-        writer.write(algorithm.findRegExp(states,fsa, initial, fin));
+        writer.write(algorithm.findRegExp(states, fsa, initial, fin));
 
         in.close();
         writer.close();
@@ -184,32 +184,62 @@ public class Main {
     }
 
     private static void E2(PrintWriter writer, HashMap<String, ArrayList<Transition>> fsa,
-                           ArrayList<String> states) {
+                           HashMap<String, ArrayList<Transition>> inTransitions, ArrayList<String> states) {
+        HashMap<String, ArrayList<Transition>> fsa2 = new HashMap<>(fsa);
+        for (String key : fsa2.keySet()) {
+            fsa2.put(key, new ArrayList<>(fsa.get(key)));
+        }
+        for (String key : fsa2.keySet()) {
+            for (String key2 : inTransitions.keySet()) {
+                if (key.equals(key2)) {
+                    fsa2.get(key).addAll(inTransitions.get(key2));
+                }
+            }
+        }
         ArrayList<String> states2 = new ArrayList<>(states);
         Stack<String> stack = new Stack<>();
         ArrayList<String> join = new ArrayList<>();
         stack.push(states2.get(0));
         String pop;
-        while (!stack.empty()){
+        while (!stack.empty()) {
             pop = stack.pop();
-            for (int i = 0; i < fsa.get(pop).size(); i++) {
-                if(!fsa.get(pop).get(i).start.equals(fsa.get(pop).get(i).end) &&
-                        !join.contains(fsa.get(pop).get(i).end)) {
-                    stack.push(fsa.get(pop).get(i).end);
+            for (int i = 0; i < fsa2.get(pop).size(); i++) {
+                if (!fsa2.get(pop).get(i).start.equals(fsa2.get(pop).get(i).end)) {
+                    if (!stack.contains(fsa2.get(pop).get(i).end) &&
+                            !join.contains(fsa2.get(pop).get(i).end) && !pop.equals(fsa2.get(pop).get(i).end)) {
+                        stack.push(fsa2.get(pop).get(i).end);
+                    }
+                    if (!stack.contains(fsa2.get(pop).get(i).start) &&
+                            !join.contains(fsa2.get(pop).get(i).start) && !pop.equals(fsa2.get(pop).get(i).start)) {
+                        stack.push(fsa2.get(pop).get(i).start);
+                    }
+
                 }
             }
             join.add(pop);
         }
-
-        for (int i = 0; i < states2.size(); i++) {
+        int i = 0;
+        boolean mark = false;
+        String state;
+        while (i < states2.size()) {
+            if (states2.isEmpty()) {
+                break;
+            }
+            state = states2.get(i);
             for (String aJoin : join) {
-                if (states2.get(i).equals(aJoin)) {
-                    states2.remove(i);
+                if (state.equals(aJoin)) {
+                    states2.remove(state);
+                    mark = true;
                 }
             }
+            if (!mark) {
+                i++;
+            }
+            mark = false;
+
         }
 
-        if(!states2.isEmpty()){
+        if (!states2.isEmpty()) {
             writer.write("Error:\nE2: Some states are disjoint");
             writer.close();
             System.exit(0);
